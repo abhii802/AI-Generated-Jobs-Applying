@@ -62,7 +62,7 @@
 </head>
 <body>
 <header>
-  <h1>🎓 Dr. Abhishek Bhattacherjee Generated-CareerPilot Pro — Auto Job Finder & Sender</h1>
+  <h1>🎓 CareerPilot Pro — Auto Job Finder & Sender</h1>
   <p>Upload resume → seniority-aware keyword extraction → live + curated job discovery → auto-cover-letter → send with resume attached</p>
 </header>
 <div class="wrap">
@@ -111,6 +111,8 @@
         <select id="qExp"><option>Auto-detect from resume</option><option>Fresher / Entry</option><option>1–3 years</option><option>3–7 years</option><option>7+ years / Senior</option><option>15+ years / Professor level</option></select></div>
       <div class="field"><label>Availability (notice / joining)</label>
         <select id="qJoin"><option>Immediate</option><option>Within 1 month</option><option>Within 3 months</option><option>Flexible</option></select></div>
+      <div class="field"><label>Specific State (India) — optional, filters list &amp; searches</label>
+        <select id="qState"><option value="">— All of India —</option><option>Andhra Pradesh</option><option>Assam</option><option>Bihar</option><option>Chhattisgarh</option><option>Delhi (NCT)</option><option>Goa</option><option>Gujarat</option><option>Haryana</option><option>Himachal Pradesh</option><option>Jammu &amp; Kashmir</option><option>Jharkhand</option><option>Karnataka</option><option>Kerala</option><option>Madhya Pradesh</option><option>Maharashtra</option><option>Odisha</option><option>Punjab</option><option>Rajasthan</option><option>Tamil Nadu</option><option>Telangana</option><option>Uttar Pradesh</option><option>Uttarakhand</option><option>West Bengal</option></select></div>
     </div>
     <label>Which job sites should we search? (all selected by default)</label>
     <div class="src-grid" id="srcGrid"></div>
@@ -142,7 +144,7 @@
   <!-- STEP 4 -->
   <div class="card hidden" id="step4">
     <h2><span class="step-badge">4</span> Auto-Generated Cover Letter & Message</h2>
-    <p class="mut">Generated from your resume keywords + the selected job(s). Edit freely — each email is personalized per institution. Placeholders {INSTITUTION}, {ROLE}, {LOCATION}, {NAME}, {BIO}, {CONTACT} are filled per job. Gmail opens in a new tab with everything filled in; attach your resume there and press Send.</p>
+    <p class="mut">Generated from your resume keywords + the selected job(s). Edit freely — each email is personalized per institution. Placeholders {INSTITUTION}, {ROLE}, {LOCATION}, {NAME}, {BIO}, {CONTACT} are filled per job. Gmail opens in a new tab with everything filled in — <strong>all HR addresses go into BCC</strong> so no recipient can see the other HR teams, keeping your outreach private. Attach your resume there and press Send.</p>
     <label style="margin-top:14px">Subject line</label>
     <input id="subj" value="Application for {ROLE} — {NAME}">
     <label style="margin-top:12px">Your short biography (auto-built from resume)</label>
@@ -167,6 +169,10 @@
 const SKILL_DB = ["computer science","data structures","algorithms","machine learning","deep learning","artificial intelligence","generative ai","llm","python","java","c++","c#","javascript","typescript","react","angular","node.js","sql","mysql","mongodb","postgresql","oracle","aws","azure","gcp","cloud computing","devops","docker","kubernetes","linux","networking","cybersecurity","data analysis","data science","big data","hadoop","spark","web development","mobile development","android","flutter","software engineering","operating systems","dbms","compiler design","iot","blockchain","nlp","natural language processing","computer vision","data mining","teaching","lecturer","professor","research","mathematics","statistics","automation","testing","selenium","git","agile","scrum","microservices","api","rest api","spring boot","django","flask",".net","php","tableau","power bi","excel","network security","ethical hacking","digital image processing","computer graphics","theory of computation","distributed systems","information security","software testing","cloud security","tensorflow","pytorch","natural language","web3","sap","salesforce","mainframe","embedded systems","vlsi","signal processing","5g","telecommunications","blockchain development","ui ux","figma","excel vba","r programming","matlab","sap abap","data engineering","etl","snowflake","databricks","airflow","terraform","jenkins","ci/cd","ansible","network administration","system administration","penetration testing","cryptography","iot security","ar vr","unity","game development","instructional design","curriculum development","academic administration","accreditation","naac","nba accreditation","research supervision","phd supervision","journal publications","scopus","ieee","conference papers"];
 const ROLE_DB = [["head of department","Head of Department"],["hod","Head of Department"],["dean","Dean"],["professor","Professor"],["associate professor","Associate Professor"],["assistant professor","Assistant Professor"],["senior lecturer","Senior Lecturer"],["lecturer","Lecturer"],["guest faculty","Guest Faculty"],["adjunct","Adjunct Faculty"],["visiting faculty","Visiting Faculty"],["research professor","Research Professor"],["principal","Principal"],["data scientist","Data Scientist"],["senior software engineer","Senior Software Engineer"],["software engineer","Software Engineer"],["machine learning engineer","ML Engineer"],["data analyst","Data Analyst"],["devops engineer","DevOps Engineer"],["full stack developer","Full-Stack Developer"],["frontend developer","Frontend Developer"],["backend developer","Backend Developer"],["cloud engineer","Cloud Engineer"],["cloud architect","Cloud Architect"],["network engineer","Network Engineer"],["cybersecurity analyst","Cybersecurity Analyst"],["security analyst","Security Analyst"],["ai engineer","AI Engineer"],["python developer","Python Developer"],["java developer","Java Developer"],["web developer","Web Developer"],["android developer","Android Developer"],["qa engineer","QA/Test Engineer"],["business analyst","Business Analyst"],["solution architect","Solution Architect"],["technical lead","Technical Lead"],["engineering manager","Engineering Manager"],["data engineer","Data Engineer"],["blockchain developer","Blockchain Developer"],["edtech instructor","EdTech Instructor"]];
 const SENIORITY = {dean:5,hod:5,principal:5,"head of department":5,"research professor":5,professor:4,"associate professor":3,"senior lecturer":3,"assistant professor":2,lecturer:2,"adjunct":2,"visiting":2,"guest faculty":1};
+/* job-title keyword → seniority level (ordered: longest/most-specific first) */
+const JOB_LEVELS=[["head of department",5],["hod",5],["dean",5],["principal",5],["professor",4],["associate professor",3],["senior lecturer",3],["assistant professor",2],["visiting faculty",2],["guest faculty",1],["lecturer",2],["adjunct",2],["educator",1],["instructor",1],["trainer",1],["postdoctoral",3],["senior research",2],["junior research",1],["research fellow",1],["research associate",2],["engineering manager",4],["technical lead",3],["team lead",3],["architect",3],["senior software",3],["senior data",3],["manager",3],["lead",3],["data scientist",2],["machine learning",2],["ml engineer",2],["devops",2],["cloud",2],["security",2],["data engineer",2],["support engineer",1],["software engineer",1],["developer",1],["analyst",1],["intern",0],["fresher",0],["trainee",0]];
+const jobLevel=t=>{t=(t||"").toLowerCase();for(const[k,v]of JOB_LEVELS)if(t.includes(k))return v;return -1;};
+const LVL_TXT={0:"Fresher/Intern",1:"Junior (Lecturer/Engineer)",2:"Mid (Assistant Prof/Sr. roles)",3:"Senior (Associate Prof/Lead)",4:"Professor/Architect level",5:"Leadership (HoD/Dean/Principal)"};
 
 const SITES = [
  {n:"Indeed",u:"https://www.indeed.com/jobs?q={Q}&l={L}"},
@@ -253,6 +259,10 @@ const JOBS = [
  {t:"Data Engineer",i:"Spotify",ty:"IT Industry",loc:"Stockholm, Sweden",sal:"SEK 550–750k",src:"LinkedIn",d:3,g:1},
  {t:"DevOps Engineer",i:"Canva (Remote APAC)",ty:"IT Industry",loc:"Remote (APAC)",sal:"A$110–150k",src:"RemoteOK",d:2,g:1}
 ];
+
+/* Indian state -> keywords matched against a job's location text */
+const STATE_KW={"Andhra Pradesh":["andhra","vijayawada","tirupati","amaravati","guntur"],"Assam":["assam","guwahati"],"Bihar":["bihar","patna"],"Chhattisgarh":["chhattisgarh","raipur","bhilai"],"Delhi (NCT)":["delhi","new delhi","nsut","dtu","iiit delhi"],"Goa":["goa","panaji"],"Gujarat":["gujarat","ahmedabad","gandhinagar","surat","vadodara"],"Haryana":["haryana","gurgaon","gurugram","faridabad","karnal"],"Himachal Pradesh":["himachal","shimla","mandi"],"Jammu & Kashmir":["jammu","kashmir","srinagar"],"Jharkhand":["jharkhand","mesra","ranchi","bit mesra"],"Karnataka":["karnataka","bengaluru","bangalore","manipal","mangaluru","mysore","hubli"],"Kerala":["kerala","kochi","kozhikode","thiruvananthapuram"],"Madhya Pradesh":["madhya pradesh","bhopal","indore","jabalpur"],"Maharashtra":["maharashtra","mumbai","pune","nagpur","nashik","navi mumbai"],"Odisha":["odisha","bhubaneswar","cuttack","kiit"],"Punjab":["punjab","mohali","patiala","ludhiana","amritsar","chandigarh","thapar","cuchd"],"Rajasthan":["rajasthan","jaipur","jodhpur","udaipur","kota"],"Tamil Nadu":["tamil nadu","chennai","vellore","coimbatore","madurai","trichy","srm","vit"],"Telangana":["telangana","hyderabad","warangal","iiit hyderabad"],"Uttar Pradesh":["uttar pradesh","noida","lucknow","kanpur","agra","amity"],"Uttarakhand":["uttarakhand","dehradun"],"West Bengal":["west bengal","kolkata","kharagpur","shibpur"]};
+const METRO_RX=/delhi|new delhi|mumbai|pune|bengaluru|bangalore|hyderabad|chennai|noida|gurgaon|gurugram|kolkata/i;
 
 let resumeText="", skills=[], roles=[], contacts={name:"",email:"",phone:""}, resumeFile={name:"",b64:"",type:""}, currentRank={label:"",level:0};
 
@@ -366,7 +376,8 @@ function extractKeywords(){
   roles=[];hit.forEach(([k,label])=>{if(!hit.some(([k2])=>k2!==k&&k2.length>k.length&&k2.includes(k))&&!roles.includes(label))roles.push(label);});
   contacts.email=(resumeText.match(EMAIL_RX)||[""])[0];
   contacts.phone=((resumeText.match(/\+?\d[\d\s\-().]{8,16}\d/g)||[]).find(p=>{const d=p.replace(/\D/g,"").length;return d>=10&&d<=13&&!/(19|20)\d\d\s*[-–]\s*(19|20)\d\d/.test(p);})||"").trim();
-  let nm=resumeText.split(/\n+/).slice(0,10).map(l=>l.trim()).find(l=>l&&l.length<50&&!/[@\d]|resume|curriculum|vitae|\bcv\b|profile|address|contact/i.test(l)&&/^(?:(?:dr|prof|mr|ms|mrs)\.?\s+)?[A-Za-z][A-Za-z.'-]+(?:\s+[A-Za-z][A-Za-z.'-]+){1,3}$/.test(l))||"";
+  let nm=(resumeText.split(/\n+/).slice(0,14).map(l=>l.trim().replace(/^(name|full name|candidate)\s*[:\-–]\s*/i,"")).find(l=>l&&l.length<60&&!/[@\d]|resume|curriculum|vitae|\bcv\b|profile|address|contact|objective|summary|phone|email|linkedin/i.test(l)&&/^(?:(?:dr|prof|mr|ms|mrs|shri|smt)\.?\s+)?(?:[A-Za-z][A-Za-z.'-]*\.?\s+){1,3}[A-Za-z][A-Za-z.'-]*\.?$/.test(l))||"");
+  if(!nm&&contacts.email)nm=contacts.email.split("@")[0].replace(/[._\-+]+/g," ").replace(/\d+/g,"").trim().replace(/\b\w/g,c=>c.toUpperCase());
   if(nm&&nm===nm.toUpperCase())nm=nm.toLowerCase().replace(/\b\w/g,c=>c.toUpperCase());
   contacts.name=nm;
   $('resumeInfo').classList.remove('hidden');
@@ -377,8 +388,9 @@ function extractKeywords(){
   $('qName').value=contacts.name;$('qEmail').value=contacts.email;$('qPhone').value=contacts.phone;
   if(currentRank.level>=4)$('qExp').value="15+ years / Professor level";
   else if(currentRank.level>=3)$('qExp').value="7+ years / Senior";
+  const _u=currentRank.level||0;
   $('seniorityNote').innerHTML=`🎖️ <strong>Seniority-aware search active:</strong> Your resume indicates you are currently a <strong>${esc(currentRank.label)}</strong>. `+
-    (currentRank.level>=4?`Jobs in <strong>India will be filtered to ${esc(currentRank.label)}-level only</strong> (Assistant/Associate-level posts excluded). International/remote results are unrestricted.`:`India results will prioritise roles at or above your current level.`);
+    `Jobs in <strong>India are filtered to roles matching your profile</strong> — roughly <strong>${LVL_TXT[Math.max(0,_u-1)]}</strong> up to <strong>${LVL_TXT[Math.min(5,_u+2)]}</strong>. International/remote results are unrestricted.`;
   $('step2').classList.remove('hidden');
   buildSrcGrid();
   $('step2').scrollIntoView({behavior:'smooth'});
@@ -389,8 +401,9 @@ function buildSrcGrid(){$('srcGrid').innerHTML=SITES.map((s,i)=>`<label><input t
 function buildQuery(){
   const isProf=currentRank.level>=4;
   const kw=skills.filter(s=>!/professor|lecturer|teaching/.test(s)).slice(0,3).join(" ");
-  let role=isProf?(/Head|Dean/.test(currentRank.label)?"Professor Head of Department":"Professor"):(roles[0]||"Computer Science");
+  let role=isProf?(/Head|Dean/.test(currentRank.label)?"Professor Head of Department":"Professor"):(roles[0]||(currentRank.level<=1?"Computer Science Fresher":"Computer Science"));
   let q=(role+" "+(kw||"computer science engineering")).trim();
+  if(currentRank.level<=1&&!isProf)q+=" entry level";
   if(/Abroad|Gulf|Europe/.test($('qLoc').value))q+=" international";
   return {q,isProf};
 }
@@ -400,8 +413,16 @@ async function getJSON(u){const r=await fetch(u,{signal:AbortSignal.timeout(8000
 async function findJobs(){
   const btn=$('findBtn');btn.disabled=true;btn.innerHTML='<span class="spin"></span> Fetching live jobs…';
   try{
-  const {q,isProf}=buildQuery(), locSel=$('qLoc').value, abroad=/Abroad|Gulf|Europe/.test(locSel), indiaOnly=!abroad;
-  const loc=locSel.includes("Remote")?"Remote":abroad?"":(locSel.includes("Metro")?"Delhi Mumbai Bengaluru Hyderabad Pune Chennai":"India");
+  const {q,isProf}=buildQuery(), locSel=$('qLoc').value, abroad=/Abroad|Gulf|Europe/.test(locSel), indiaOnly=!abroad&&!locSel.includes("Remote"), uLvl=currentRank.level||0;
+  const state=$('qState').value, stateKW=state?(STATE_KW[state]||[]):[];
+  const wantRemote=locSel.includes("Remote");
+  const loc=state?state:wantRemote?"Remote":abroad?"":(locSel.includes("Metro")?"Delhi Mumbai Bengaluru Hyderabad Pune Chennai":"India");
+  const inRegion=s=>{s=(s||"").toLowerCase();if(abroad||!indiaOnly&&!wantRemote)return true;
+    if(wantRemote&&(!s||/remote|work from home|wfh|anywhere|worldwide|global/i.test(s)))return true;
+    if(!indiaOnly)return false;
+    if(stateKW.length)return stateKW.some(k=>s.includes(k));
+    if(locSel.includes("Metro"))return METRO_RX.test(s);
+    return s.includes("india")||Object.values(STATE_KW).some(kw=>kw.some(k=>s.includes(k)));};
   const qEnc=encodeURIComponent(q), qs=slug(q), ls=(!loc||loc==="Remote"||/ /.test(loc))?"india":slug(loc);
   let links="";
   document.querySelectorAll('.src:checked').forEach(cb=>{const s=SITES[+cb.dataset.i];
@@ -409,17 +430,20 @@ async function findJobs(){
   $('liveLinks').innerHTML=links;
 
   const typePref=$('qType').value;
+  const wantTeachOnly=/^Teaching/.test(typePref), wantITOnly=/^IT/.test(typePref), wantResearchOnly=/^Research/.test(typePref);
   let list=JOBS.filter(j=>{
     if(indiaOnly&&j.g)return false;
-    if(typePref.includes("Teaching only")&&j.ty!=="Teaching")return false;
-    if(typePref.includes("IT only")&&j.ty!=="IT Industry")return false;
-    if(typePref.includes("Research")&&j.ty!=="Research")return false;
+    if(wantTeachOnly&&j.ty!=="Teaching")return false;
+    if(wantITOnly&&j.ty!=="IT Industry")return false;
+    if(wantResearchOnly&&j.ty!=="Research")return false;
+    if(!inRegion(j.loc))return false;
     return true;
   });
-  if(isProf&&indiaOnly)list=list.filter(j=>!/(assistant professor|associate professor|lecturer|guest faculty|junior|fresher)/i.test(j.t));
+  /* Generic seniority filter: India list keeps roles from one step below to two steps above the user's detected level */
+  if(indiaOnly)list=list.filter(j=>{const l=jobLevel(j.t);return l===-1||(l>=uLvl-1&&l<=uLvl+2);});
 
   const note=$('fetchNote');note.innerHTML="";
-  const live=[], wantTeachOnly=typePref.includes("Teaching only");
+  const live=[];
   const score=(t,d)=>{const txt=(t+" "+d).toLowerCase().slice(0,4000);let m=0;skills.forEach(s=>{if(has(txt,s.trim()))m+=2;});
     if(isProf&&/professor|head|dean|principal/i.test(t))m+=6;
     if(/teaching|professor/i.test(t)&&roles.some(r=>/professor|lecturer/i.test(r)))m+=4;return m;};
@@ -428,14 +452,14 @@ async function findJobs(){
     try{
       const rk=await getJSON("https://remoteok.com/api");
       rk.slice(1,120).forEach(j=>{
-        if(score(j.position||"",j.description||"")>=2&&!(isProf&&indiaOnly&&/intern|junior|student/i.test(j.position||"")))
+        if(score(j.position||"",j.description||"")>=2&&inRegion(j.location||"")&&!(indiaOnly&&uLvl>=2&&/intern|junior|student|fresher/i.test(j.position||"")))
           live.push({t:j.position||"Role",i:j.company||"Company",ty:"IT Industry",loc:j.location||"Remote",sal:j.salary_min?"$"+Math.round(j.salary_min/1000)+"k+":"Competitive",src:"RemoteOK (live)",url:safeUrl(j.url),live:1,contact:mailOf(j.description)});});
     }catch(e){note.innerHTML+=`<div class="alert warn">RemoteOK live feed unavailable (offline or blocked) — using curated + other sources.</div>`;}
-    if(abroad||locSel.includes("Remote")){
+    if(abroad||wantRemote||stateKW.length){
       try{
         const an=await getJSON("https://www.arbeitnow.com/api/job-board-api");
         (an.data||[]).slice(0,80).forEach(j=>{
-          if((abroad||j.remote)&&score(j.title||"",j.description||"")>=2)
+          if((abroad||j.remote||stateKW.length)&&inRegion(j.location||"")&&score(j.title||"",j.description||"")>=2)
             live.push({t:j.title||"Role",i:j.company_name||"Company",ty:"IT Industry",loc:j.location||"Europe (remote-friendly)",sal:"Competitive",src:"Arbeitnow (live)",url:safeUrl(j.url),live:1,contact:mailOf(j.description)});});
       }catch(e){}
     }
@@ -457,7 +481,7 @@ async function findJobs(){
     <td class="${j.match>=80?'match-high':j.match>=65?'match-med':'match-low'}">${j.match}%</td></tr>`;}).join("");
   $('countBadge').textContent=list.length+" jobs found";
   note.innerHTML+=`<div class="alert info">📬 ${list.filter(j=>j.contact).length} of ${list.length} jobs have a known HR email (marked 📬, shown first, auto-filled into Gmail). Tick “Only list jobs whose HR email is known” in Step 2 to hide the rest.</div>`;
-  $('searchSummary').textContent=`Query used: “${q}” · ${links.split('</a>').length-1} one-click site searches · ${live.length} live API postings + sample listings (click a title to verify on the web). `+(isProf&&indiaOnly?"🔒 India list filtered to Professor-level and above only.":"");
+  $('searchSummary').textContent=`Query used: “${q}”${state?" · State filter: "+state:""} · ${links.split('</a>').length-1} one-click site searches · ${live.length} live API postings + sample listings (click a title to verify on the web). `+(indiaOnly?`🔒 India list filtered to match your ${esc(currentRank.label)} profile (one step below → two steps above).`:"");
   if(!note.innerHTML&&live.length)note.innerHTML=`<div class="alert ok">✅ Pulled ${live.length} live postings in real time.</div>`;
   $('step3').classList.remove('hidden');$('step3').scrollIntoView({behavior:'smooth'});autoFind();
   }catch(e){alert("Search failed: "+e.message);}
@@ -607,9 +631,9 @@ function openGmail(){
   const body=$('cover').value.replace("Dear Hiring Manager at {INSTITUTION}","Dear Hiring Manager").replace(" at {INSTITUTION} ({LOCATION})","").replaceAll("{INSTITUTION}","your organisation").replaceAll("{ROLE}",role).replaceAll("{LOCATION}","").replaceAll("{BIO}",$('bio').value).replaceAll("{NAME}",name).replaceAll("{CONTACT}",[$('qEmail').value,$('qPhone').value].filter(Boolean).join(" | "));
   const subj=clean($('subj').value.replaceAll("{ROLE}",role).replaceAll("{NAME}",name));
   const cc=clean($('ccEmail').value);
-  const u=`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(list.join(","))}${cc?"&cc="+encodeURIComponent(cc):""}&su=${encodeURIComponent(subj)}&body=${encodeURIComponent(body)}`;
+  const u=`https://mail.google.com/mail/?view=cm&fs=1&bcc=${encodeURIComponent(list.join(","))}${cc?"&cc="+encodeURIComponent(cc):""}&su=${encodeURIComponent(subj)}&body=${encodeURIComponent(body)}`;
   window.open(u,"_blank");
-  $('sendStatus').innerHTML=list.length?`<div class="alert ok">✅ ${list.length} HR email(s) added to the To field. Attach “${esc(resumeFile.name||"your resume")}” and press Send.</div>`
+  $('sendStatus').innerHTML=list.length?`<div class="alert ok">✅ ${list.length} HR email(s) added to the <strong>BCC field</strong> — every address is hidden from all recipients, so no HR team can see that others were emailed. Attach “${esc(resumeFile.name||"your resume")}” and press Send.</div>`
     :`<div class="alert warn">⚠️ No HR emails were found, so To is empty. Paste them in the boxes above (they are remembered for next time).</div>`;
 }
 </script>
