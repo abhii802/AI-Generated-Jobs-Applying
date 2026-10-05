@@ -170,7 +170,7 @@ const SKILL_DB = ["computer science","data structures","algorithms","machine lea
 const ROLE_DB = [["head of department","Head of Department"],["hod","Head of Department"],["dean","Dean"],["professor","Professor"],["associate professor","Associate Professor"],["assistant professor","Assistant Professor"],["senior lecturer","Senior Lecturer"],["lecturer","Lecturer"],["guest faculty","Guest Faculty"],["adjunct","Adjunct Faculty"],["visiting faculty","Visiting Faculty"],["research professor","Research Professor"],["principal","Principal"],["data scientist","Data Scientist"],["senior software engineer","Senior Software Engineer"],["software engineer","Software Engineer"],["machine learning engineer","ML Engineer"],["data analyst","Data Analyst"],["devops engineer","DevOps Engineer"],["full stack developer","Full-Stack Developer"],["frontend developer","Frontend Developer"],["backend developer","Backend Developer"],["cloud engineer","Cloud Engineer"],["cloud architect","Cloud Architect"],["network engineer","Network Engineer"],["cybersecurity analyst","Cybersecurity Analyst"],["security analyst","Security Analyst"],["ai engineer","AI Engineer"],["python developer","Python Developer"],["java developer","Java Developer"],["web developer","Web Developer"],["android developer","Android Developer"],["qa engineer","QA/Test Engineer"],["business analyst","Business Analyst"],["solution architect","Solution Architect"],["technical lead","Technical Lead"],["engineering manager","Engineering Manager"],["data engineer","Data Engineer"],["blockchain developer","Blockchain Developer"],["edtech instructor","EdTech Instructor"]];
 const SENIORITY = {dean:5,hod:5,principal:5,"head of department":5,"research professor":5,professor:4,"associate professor":3,"senior lecturer":3,"assistant professor":2,lecturer:2,"adjunct":2,"visiting":2,"guest faculty":1};
 /* job-title keyword → seniority level (ordered: longest/most-specific first) */
-const JOB_LEVELS=[["head of department",5],["hod",5],["dean",5],["principal",5],["professor",4],["associate professor",3],["senior lecturer",3],["assistant professor",2],["visiting faculty",2],["guest faculty",1],["lecturer",2],["adjunct",2],["educator",1],["instructor",1],["trainer",1],["postdoctoral",3],["senior research",2],["junior research",1],["research fellow",1],["research associate",2],["engineering manager",4],["technical lead",3],["team lead",3],["architect",3],["senior software",3],["senior data",3],["manager",3],["lead",3],["data scientist",2],["machine learning",2],["ml engineer",2],["devops",2],["cloud",2],["security",2],["data engineer",2],["support engineer",1],["software engineer",1],["developer",1],["analyst",1],["intern",0],["fresher",0],["trainee",0]];
+const JOB_LEVELS=[["head of department",5],["hod",5],["dean",5],["principal",5],["associate professor",3],["assistant professor",2],["senior lecturer",3],["visiting faculty",2],["guest faculty",1],["research professor",5],["professor",4],["lecturer",2],["adjunct",2],["educator",1],["instructor",1],["trainer",1],["postdoctoral",3],["senior research",2],["junior research",1],["research fellow",1],["research associate",2],["engineering manager",4],["technical lead",3],["team lead",3],["architect",3],["senior software",3],["senior data",3],["manager",3],["lead",3],["data scientist",2],["machine learning",2],["ml engineer",2],["devops",2],["cloud",2],["security",2],["data engineer",2],["support engineer",1],["software engineer",1],["developer",1],["analyst",1],["intern",0],["fresher",0],["trainee",0]];
 const jobLevel=t=>{t=(t||"").toLowerCase();for(const[k,v]of JOB_LEVELS)if(t.includes(k))return v;return -1;};
 const LVL_TXT={0:"Fresher/Intern",1:"Junior (Lecturer/Engineer)",2:"Mid (Assistant Prof/Sr. roles)",3:"Senior (Associate Prof/Lead)",4:"Professor/Architect level",5:"Leadership (HoD/Dean/Principal)"};
 
@@ -263,6 +263,9 @@ const JOBS = [
 /* Indian state -> keywords matched against a job's location text */
 const STATE_KW={"Andhra Pradesh":["andhra","vijayawada","tirupati","amaravati","guntur"],"Assam":["assam","guwahati"],"Bihar":["bihar","patna"],"Chhattisgarh":["chhattisgarh","raipur","bhilai"],"Delhi (NCT)":["delhi","new delhi","nsut","dtu","iiit delhi"],"Goa":["goa","panaji"],"Gujarat":["gujarat","ahmedabad","gandhinagar","surat","vadodara"],"Haryana":["haryana","gurgaon","gurugram","faridabad","karnal"],"Himachal Pradesh":["himachal","shimla","mandi"],"Jammu & Kashmir":["jammu","kashmir","srinagar"],"Jharkhand":["jharkhand","mesra","ranchi","bit mesra"],"Karnataka":["karnataka","bengaluru","bangalore","manipal","mangaluru","mysore","hubli"],"Kerala":["kerala","kochi","kozhikode","thiruvananthapuram"],"Madhya Pradesh":["madhya pradesh","bhopal","indore","jabalpur"],"Maharashtra":["maharashtra","mumbai","pune","nagpur","nashik","navi mumbai"],"Odisha":["odisha","bhubaneswar","cuttack","kiit"],"Punjab":["punjab","mohali","patiala","ludhiana","amritsar","chandigarh","thapar","cuchd"],"Rajasthan":["rajasthan","jaipur","jodhpur","udaipur","kota"],"Tamil Nadu":["tamil nadu","chennai","vellore","coimbatore","madurai","trichy","srm","vit"],"Telangana":["telangana","hyderabad","warangal","iiit hyderabad"],"Uttar Pradesh":["uttar pradesh","noida","lucknow","kanpur","agra","amity"],"Uttarakhand":["uttarakhand","dehradun"],"West Bengal":["west bengal","kolkata","kharagpur","shibpur"]};
 const METRO_RX=/delhi|new delhi|mumbai|pune|bengaluru|bangalore|hyderabad|chennai|noida|gurgaon|gurugram|kolkata/i;
+const EUROPE_KW=["europe","(eu)"," eu ","germany","munich","berlin","frankfurt","hamburg","sweden","stockholm","gothenburg","ireland","dublin","united kingdom"," uk","uk,","london","manchester","edinburgh","glasgow","cambridge","oxford","leeds","bristol","netherlands","amsterdam","holland","france","paris","lyon","spain","madrid","barcelona","italy","milan","rome","poland","warsaw","krakow","portugal","lisbon","porto","belgium","brussels","austria","vienna","switzerland","zurich","geneva","basel","denmark","copenhagen","norway","oslo","finland","helsinki","czech","prague","greece","athens","romania","bucharest","hungary","budapest","estonia","tallinn","latvia","riga","lithuania","vilnius","luxembourg","malta","croatia","zagreb","slovenia","bratislava","slovakia","cyprus","iceland"];
+const GULF_KW=["dubai","uae","abu dhabi","sharjah","ajman","qatar","doha","saudi","riyadh","jeddah","khobar","bahrain","manama","kuwait","oman","muscat","gcc"];
+const isIndiaLoc=s=>s.includes("india")||Object.values(STATE_KW).some(kw=>kw.some(k=>s.includes(k)));
 
 let resumeText="", skills=[], roles=[], contacts={name:"",email:"",phone:""}, resumeFile={name:"",b64:"",type:""}, currentRank={label:"",level:0};
 
@@ -390,7 +393,7 @@ function extractKeywords(){
   else if(currentRank.level>=3)$('qExp').value="7+ years / Senior";
   const _u=currentRank.level||0;
   $('seniorityNote').innerHTML=`🎖️ <strong>Seniority-aware search active:</strong> Your resume indicates you are currently a <strong>${esc(currentRank.label)}</strong>. `+
-    `Jobs in <strong>India are filtered to roles matching your profile</strong> — roughly <strong>${LVL_TXT[Math.max(0,_u-1)]}</strong> up to <strong>${LVL_TXT[Math.min(5,_u+2)]}</strong>. International/remote results are unrestricted.`;
+    `India results are filtered <strong>strictly to your level — ${esc(currentRank.label)} posts only</strong>`+(_u>=4?" <strong>and above</strong> (e.g. HoD/Dean)":"")+(_u<=1?", plus other entry-level roles":"")+`. International/remote results are unrestricted.`;
   $('step2').classList.remove('hidden');
   buildSrcGrid();
   $('step2').scrollIntoView({behavior:'smooth'});
@@ -415,14 +418,17 @@ async function findJobs(){
   try{
   const {q,isProf}=buildQuery(), locSel=$('qLoc').value, abroad=/Abroad|Gulf|Europe/.test(locSel), indiaOnly=!abroad&&!locSel.includes("Remote"), uLvl=currentRank.level||0;
   const state=$('qState').value, stateKW=state?(STATE_KW[state]||[]):[];
-  const wantRemote=locSel.includes("Remote");
+  const wantRemote=locSel.includes("Remote"), wantEurope=/Europe/.test(locSel), wantGulf=/Gulf/.test(locSel), wantAbroad=/Abroad/.test(locSel);
   const loc=state?state:wantRemote?"Remote":abroad?"":(locSel.includes("Metro")?"Delhi Mumbai Bengaluru Hyderabad Pune Chennai":"India");
-  const inRegion=s=>{s=(s||"").toLowerCase();if(abroad||!indiaOnly&&!wantRemote)return true;
-    if(wantRemote&&(!s||/remote|work from home|wfh|anywhere|worldwide|global/i.test(s)))return true;
-    if(!indiaOnly)return false;
+  /* Strict region matching: a job is shown ONLY if its location matches the selected preference */
+  const inRegion=s=>{s=(s||"").toLowerCase();
+    if(wantRemote)return !s||/remote|work from home|wfh|anywhere|worldwide|global/i.test(s);
+    if(wantEurope)return EUROPE_KW.some(k=>s.includes(k));
+    if(wantGulf)return GULF_KW.some(k=>s.includes(k));
+    if(wantAbroad)return !isIndiaLoc(s);
     if(stateKW.length)return stateKW.some(k=>s.includes(k));
     if(locSel.includes("Metro"))return METRO_RX.test(s);
-    return s.includes("india")||Object.values(STATE_KW).some(kw=>kw.some(k=>s.includes(k)));};
+    return isIndiaLoc(s);};
   const qEnc=encodeURIComponent(q), qs=slug(q), ls=(!loc||loc==="Remote"||/ /.test(loc))?"india":slug(loc);
   let links="";
   document.querySelectorAll('.src:checked').forEach(cb=>{const s=SITES[+cb.dataset.i];
@@ -432,15 +438,17 @@ async function findJobs(){
   const typePref=$('qType').value;
   const wantTeachOnly=/^Teaching/.test(typePref), wantITOnly=/^IT/.test(typePref), wantResearchOnly=/^Research/.test(typePref);
   let list=JOBS.filter(j=>{
-    if(indiaOnly&&j.g)return false;
     if(wantTeachOnly&&j.ty!=="Teaching")return false;
     if(wantITOnly&&j.ty!=="IT Industry")return false;
     if(wantResearchOnly&&j.ty!=="Research")return false;
     if(!inRegion(j.loc))return false;
     return true;
   });
-  /* Generic seniority filter: India list keeps roles from one step below to two steps above the user's detected level */
-  if(indiaOnly)list=list.filter(j=>{const l=jobLevel(j.t);return l===-1||(l>=uLvl-1&&l<=uLvl+2);});
+  /* Strict seniority filter: exact level match — professors/leadership see their level AND above; freshers see entry-level roles */
+  if(indiaOnly)list=list.filter(j=>{const l=jobLevel(j.t);if(l===-1)return true;
+    if(uLvl>=4)return l>=uLvl;
+    if(uLvl>=2)return l===uLvl;
+    return l<=1;});
 
   const note=$('fetchNote');note.innerHTML="";
   const live=[];
@@ -481,7 +489,7 @@ async function findJobs(){
     <td class="${j.match>=80?'match-high':j.match>=65?'match-med':'match-low'}">${j.match}%</td></tr>`;}).join("");
   $('countBadge').textContent=list.length+" jobs found";
   note.innerHTML+=`<div class="alert info">📬 ${list.filter(j=>j.contact).length} of ${list.length} jobs have a known HR email (marked 📬, shown first, auto-filled into Gmail). Tick “Only list jobs whose HR email is known” in Step 2 to hide the rest.</div>`;
-  $('searchSummary').textContent=`Query used: “${q}”${state?" · State filter: "+state:""} · ${links.split('</a>').length-1} one-click site searches · ${live.length} live API postings + sample listings (click a title to verify on the web). `+(indiaOnly?`🔒 India list filtered to match your ${esc(currentRank.label)} profile (one step below → two steps above).`:"");
+  $('searchSummary').textContent=`Query used: “${q}”${state?" · State filter: "+state:""} · ${links.split('</a>').length-1} one-click site searches · ${live.length} live API postings + sample listings (click a title to verify on the web). `+(indiaOnly?`🔒 India list filtered strictly to your level: ${esc(currentRank.label)}`+(uLvl>=4?" and above":"")+` only.`:"");
   if(!note.innerHTML&&live.length)note.innerHTML=`<div class="alert ok">✅ Pulled ${live.length} live postings in real time.</div>`;
   $('step3').classList.remove('hidden');$('step3').scrollIntoView({behavior:'smooth'});autoFind();
   }catch(e){alert("Search failed: "+e.message);}
