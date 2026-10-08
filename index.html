@@ -106,6 +106,7 @@
   .rcrow{display:flex;gap:10px;align-items:center;margin-bottom:8px;flex-wrap:wrap;} .rcrow span{flex:1;min-width:220px;font-size:.85rem;} .rcrow input{flex:1;min-width:220px;}
   .tag.sample{background:#f1f5f9;color:#475569;}
 </style>
+<base target="_blank">
 </head>
 <body>
 <header>
@@ -286,6 +287,21 @@ const JOBS = [
  {t:"Senior Research Fellow – Deep Learning",i:"IIT Madras",ty:"Research",loc:"Chennai, TN",sal:"₹45–60k/mo",src:"Nature Careers",d:3},
  {t:"Junior Research Fellow – AI",i:"IISc Bangalore",ty:"Research",loc:"Bengaluru",sal:"₹31k+24% HRA/mo",src:"AcademicJobsOnline",d:1},
  {t:"Postdoctoral Fellow – Computer Vision",i:"TIFR Mumbai",ty:"Research",loc:"Mumbai",sal:"₹65–80k/mo",src:"Nature Careers",d:4},
+ {t:"Guest Faculty – Computer Science",i:"Delhi Technological University",ty:"Teaching",loc:"Delhi",sal:"₹40–60k/mo",src:"HigherEdJobs",d:1},
+ {t:"Teaching Assistant – CSE (Contract)",i:"IIIT Delhi",ty:"Teaching",loc:"Delhi",sal:"₹35–55k/mo",src:"AcademicJobsOnline",d:2},
+ {t:"Lecturer – Computer Science (Entry level)",i:"Chandigarh University",ty:"Teaching",loc:"Mohali, PB",sal:"₹5–8 LPA",src:"Shine",d:2},
+ {t:"Computer Science Teacher – School / PUC",i:"Kendriya Vidyalaya & Private Schools",ty:"Teaching",loc:"Multiple cities, India",sal:"₹4–8 LPA",src:"Indeed",d:1},
+ {t:"Lab Instructor – Programming & Networks",i:"Manipal Institute of Technology",ty:"Teaching",loc:"Manipal, KA",sal:"₹4–7 LPA",src:"Foundit",d:3},
+ {t:"Fresher – Software Engineer (Java)",i:"Infosys (Entry-level hiring)",ty:"IT Industry",loc:"Mysuru / Pune / Hyderabad",sal:"₹4–8 LPA",src:"Naukri",d:1},
+ {t:"Graduate Engineer Trainee – Python",i:"TCS Ninja",ty:"IT Industry",loc:"Mumbai / Kochi",sal:"₹3.6–7 LPA",src:"Naukri",d:1},
+ {t:"Trainee – Web Development (HTML/CSS/JS)",i:"Zoho Corp (Trainee intake)",ty:"IT Industry",loc:"Chennai",sal:"₹4–8 LPA",src:"Monster",d:2},
+ {t:"Fresher – Data Analyst (SQL / Excel)",i:"Genpact",ty:"IT Industry",loc:"Hyderabad / Noida",sal:"₹4–7 LPA",src:"Foundit",d:1},
+ {t:"Trainee – QA / Software Testing",i:"Wipro (Project Engineer)",ty:"IT Industry",loc:"Bengaluru",sal:"₹4–7.5 LPA",src:"LinkedIn",d:2},
+ {t:"Fresher – Cloud Support Associate",i:"Amazon Web Services",ty:"IT Industry",loc:"Hyderabad",sal:"₹5–9 LPA",src:"LinkedIn",d:1},
+ {t:"Intern – Machine Learning (6 months)",i:"Flipkart",ty:"IT Industry",loc:"Bengaluru",sal:"₹40–60k/mo",src:"Wellfound",d:1},
+ {t:"Trainee – DevOps (AWS/Kubernetes)",i:"HCLTech",ty:"IT Industry",loc:"Noida (Hybrid)",sal:"₹5–9 LPA",src:"Naukri",d:3},
+ {t:"Intern – Web Development (Startups)",i:"Startups via Internshala",ty:"IT Industry",loc:"Remote / Multiple cities",sal:"₹15–40k/mo",src:"Internshala",d:1},
+ {t:"Trainee – Network Engineer",i:"HCLTech",ty:"IT Industry",loc:"Nagpur",sal:"₹3.5–6 LPA",src:"Foundit",d:4},
  {t:"Software Engineer – Python",i:"TCS Digital",ty:"IT Industry",loc:"Mumbai / Pune",sal:"₹7–13 LPA",src:"Naukri",d:1},
  {t:"Data Scientist (GenAI)",i:"Wipro",ty:"IT Industry",loc:"Bengaluru (Hybrid)",sal:"₹16–30 LPA",src:"LinkedIn",d:1},
  {t:"DevOps Engineer – AWS/K8s",i:"Infosys",ty:"IT Industry",loc:"Hyderabad",sal:"₹12–22 LPA",src:"Dice",d:2},
@@ -318,7 +334,7 @@ const EUROPE_KW=["europe","(eu)"," eu ","germany","munich","berlin","frankfurt",
 const GULF_KW=["dubai","uae","abu dhabi","sharjah","ajman","qatar","doha","saudi","riyadh","jeddah","khobar","bahrain","manama","kuwait","oman","muscat","gcc"];
 const isIndiaLoc=s=>s.includes("india")||Object.values(STATE_KW).some(kw=>kw.some(k=>s.includes(k)));
 
-let resumeText="", skills=[], roles=[], contacts={name:"",email:"",phone:""}, resumeFile={name:"",b64:"",type:""}, currentRank={label:"",level:0};
+let resumeText="", skills=[], roles=[], contacts={name:"",email:"",phone:""}, resumeFile={name:"",b64:"",type:""}, currentRank={label:"",level:0}, expYears=0, profField="IT Industry", currentRankOverride="";
 
 /* ================= HELPERS ================= */
 const $=id=>document.getElementById(id);
@@ -411,17 +427,81 @@ async function parseFile(f){
 }
 
 const RANKS=Object.keys(SENIORITY).sort((a,b)=>b.length-a.length);
+const EDU_RX=/b\.?tech|b\.?e\b|m\.?tech|m\.?e\b|bachelor|master|ph\.?d|doctorate|degree|graduat|university|college|school|ssc|hsc|cbse|icse|cgpa|gpa|class of|xii\b|\b12th\b|\b10th\b|intermediate/;
+const FIELD_DB={"Teaching":["professor","lecturer","faculty","teaching","curriculum","academic","naac","accreditation","syllabus","classroom","pedagogy","workshop conducted","invigilation","student mentor"],"IT Industry":["software","developer","engineer","devops","cloud","full stack","full-stack","frontend","front-end","backend","back-end","data scientist","analyst","programmer","web development","app development","react","angular","node.js","automation","it company","deployment","api","database","network"],"Research":["research","publication","journal","conference","paper presented","paper published","ph\.?d","doctoral","scopus","ieee","fellowship","thesis","postdoc"]};
+function analyzeExperience(txt){
+  let months=0;const seen=new Set();
+  const rx=/((?:19|20)\d{2})\s*[-–—]+\s*((?:19|20)\d{2}|present|current|now|till date|to date)/gi;
+  let m;
+  while((m=rx.exec(txt))){
+    const y1=+m[1];const e=m[2].toLowerCase();
+    let y2=/^\d{4}$/.test(e)?+e:new Date().getFullYear();
+    if(y2<y1||y2-y1>35)continue;                    /* ignore DOB-like junk */
+    const key=y1+"-"+y2;
+    if(seen.has(key))continue;seen.add(key);
+    months+=(y2-y1)*12;
+  }
+  let yrs=months/12;
+  /* keep only lines that are NOT education before trusting ranges (narrow filter: degree words only,
+     so a line like "Assistant Professor, ABC College, 2017 - 2019" is still counted) */
+  const EDU_NARROW=/b\.?tech|b\.?e\b|m\.?tech|m\.?e\b|bachelor|master|ph\.?d|doctorate|degree|graduat|cgpa|gpa|class of|xii\b|\b12th\b|\b10th\b|intermediate|ssc|hsc|cbse|icse|percentage/;
+  const work=txt.split(/\n+/).filter(l=>!EDU_NARROW.test(l)).join("\n");
+  const wrx=/((?:19|20)\d{2})\s*[-–—]+\s*((?:19|20)\d{2}|present|current|now|till date|to date)/gi;
+  let wm=0;seen.clear();
+  while((m=wrx.exec(work))){
+    const y1=+m[1];const e=m[2].toLowerCase();
+    let y2=/^\d{4}$/.test(e)?+e:new Date().getFullYear();
+    if(y2<y1||y2-y1>35)continue;
+    const key=y1+"-"+y2;
+    if(seen.has(key))continue;seen.add(key);
+    wm+=(y2-y1)*12;
+  }
+  yrs=wm/12;
+  const ex=work.match(/(\d{1,2})\s*\+?\s*(?:years?|yrs?).{0,30}?\bexperience\b/i)||txt.match(/(\d{1,2})\s*\+?\s*(?:years?|yrs?).{0,30}?\bexperience\b/i);
+  if(ex)yrs=Math.max(yrs,Math.min(40,+ex[1]));
+  if(/fresher|no experience|no prior experience|seeking entry|entry level|seeking (?:an? )?(?:entry|opportunit)/i.test(txt))yrs=Math.min(yrs,0.5);
+  return Math.min(yrs,40);
+}
+function analyzeField(txt){
+  const sc=f=>FIELD_DB[f].reduce((n,k)=>n+(has(txt,k)?1:0),0);
+  const sT=sc("Teaching"),sI=sc("IT Industry"),sR=sc("Research");
+  if(sT>0&&sT>=sI&&sT>=sR)return "Teaching";
+  if(sR>sI&&sR>sT)return "Research";
+  return "IT Industry";
+}
 function detectSeniority(){
+  currentRankOverride="";
+  const txt=resumeText.toLowerCase();
+  expYears=analyzeExperience(txt);
+  profField=analyzeField(txt);
   let best=null,bs=0;
   for(const raw of resumeText.split(/\n+/)){
     const line=raw.toLowerCase();
-    if(/referee|reference/.test(line))continue;
+    if(/referee|reference|declaration|hobbies?|date\b|place\b/.test(line)||EDU_RX.test(line))continue;
     const k=RANKS.find(k=>has(line,k)&&!(k==="principal"&&/principal\s+(component|engineer|investigator|consultant|architect|scientist|software)/.test(line)));
     if(!k)continue;
     const sc=SENIORITY[k]+(/\b(currently|present|current|working as|designation)\b/.test(line)?3:0);
     if(sc>bs){bs=sc;best=k;}
   }
-  currentRank=best?{label:ROLE_DB.find(([k])=>k===best)?.[1]||best.replace(/\b\w/g,c=>c.toUpperCase()),level:SENIORITY[best]}:{label:"Professional",level:1};
+  /* level from measured work experience */
+  let lvl;
+  if(expYears<1)lvl=0;else if(expYears<3)lvl=1;else if(expYears<7)lvl=2;else if(expYears<15)lvl=3;else lvl=4;
+  /* title signal: a senior title only counts when measured experience can back it up */
+  if(best){
+    const tl=SENIORITY[best];
+    if(expYears>=0.5&&tl>lvl&&expYears>=3)lvl=tl;      /* real seniority confirmed */
+    else if(tl>lvl)best=null;                          /* inflated title (e.g. "Professor" in a references line) — ignore */
+  }
+  /* prefer a detected role title that fits the measured level for the display label */
+  if(!best){
+    const rl=ROLE_DB.filter(([k])=>has(txt,k)).map(([,l])=>l).find(l=>jobLevel(l)>=0&&jobLevel(l)<=lvl);
+    if(rl)best=null,currentRankOverride=rl;
+  }
+  if(currentRankOverride)currentRank={label:currentRankOverride,level:lvl};
+  else if(!best&&lvl===0)currentRank={label:"Fresher",level:0};
+  else if(!best)currentRank={label:profField==="Teaching"?"Teaching / Faculty Professional":profField==="Research"?"Research Professional":"IT Professional",level:lvl};
+  else currentRank={label:ROLE_DB.find(([k])=>k===best)?.[1]||best.replace(/\b\w/g,c=>c.toUpperCase()),level:lvl};
+  currentRank.years=expYears;currentRank.field=profField;
 }
 
 function extractKeywords(){
@@ -430,6 +510,8 @@ function extractKeywords(){
   skills=SKILL_DB.filter(s=>has(low,s.trim()));
   const hit=ROLE_DB.filter(([k])=>has(low,k));
   roles=[];hit.forEach(([k,label])=>{if(!hit.some(([k2])=>k2!==k&&k2.length>k.length&&k2.includes(k))&&!roles.includes(label))roles.push(label);});
+  /* drop role titles that measured experience cannot support (avoids "Professor" from a references line) */
+  roles=roles.filter(r=>!(expYears<3&&jobLevel(r)>currentRank.level+1));
   contacts.email=(resumeText.match(EMAIL_RX)||[""])[0];
   contacts.phone=((resumeText.match(/\+?\d[\d\s\-().]{8,16}\d/g)||[]).find(p=>{const d=p.replace(/\D/g,"").length;return d>=10&&d<=13&&!/(19|20)\d\d\s*[-–]\s*(19|20)\d\d/.test(p);})||"").trim();
   let nm=(resumeText.split(/\n+/).slice(0,14).map(l=>l.trim().replace(/^(name|full name|candidate)\s*[:\-–]\s*/i,"")).find(l=>l&&l.length<60&&!/[@\d]|resume|curriculum|vitae|\bcv\b|profile|address|contact|objective|summary|phone|email|linkedin/i.test(l)&&/^(?:(?:dr|prof|mr|ms|mrs|shri|smt)\.?\s+)?(?:[A-Za-z][A-Za-z.'-]*\.?\s+){1,3}[A-Za-z][A-Za-z.'-]*\.?$/.test(l))||"");
@@ -437,16 +519,22 @@ function extractKeywords(){
   if(nm&&nm===nm.toUpperCase())nm=nm.toLowerCase().replace(/\b\w/g,c=>c.toUpperCase());
   contacts.name=nm;
   $('resumeInfo').classList.remove('hidden');
-  $('rankChips').innerHTML=`<span class="chip rank">🎖️ Current designation detected: ${esc(currentRank.label)}</span>`;
+  $('rankChips').innerHTML=`<span class="chip rank">🎖️ Profile: ${esc(currentRank.label)}</span><span class="chip rank">⏳ Experience: ${currentRank.years<1?"Fresher (less than 1 year)":Math.round(currentRank.years)+" years"}</span><span class="chip rank">🧭 Field: ${esc(currentRank.field)}</span>`;
   const mk=(arr,cls,el)=>$(el).innerHTML=arr.length?arr.map(x=>`<span class="chip ${cls}">${esc(x)}</span>`).join(""):'<span class="mut">None detected</span>';
   mk(roles,"role","roleChips");mk(skills,"","skillChips");
   $('contactChips').innerHTML=(contacts.name?`<span class="chip contact">👤 ${esc(contacts.name)}</span>`:"")+(contacts.email?`<span class="chip contact">✉️ ${esc(contacts.email)}</span>`:"")+(contacts.phone?`<span class="chip contact">📱 ${esc(contacts.phone)}</span>`:"")||'<span class="mut">None detected</span>';
   $('qName').value=contacts.name;$('qEmail').value=contacts.email;$('qPhone').value=contacts.phone;
-  if(currentRank.level>=4)$('qExp').value="15+ years / Professor level";
-  else if(currentRank.level>=3)$('qExp').value="7+ years / Senior";
+  /* auto-fill experience level from measured years */
+  const _y=currentRank.years||0;
+  $('qExp').value=_y<1?"Fresher / Entry":_y<3?"1–3 years":_y<7?"3–7 years":_y<15?"7+ years / Senior":"15+ years / Professor level";
+  /* auto-select job type from detected field (user can change in Step 2) */
+  $('qType').value=currentRank.field==="Teaching"?"Teaching / Faculty only":currentRank.field==="Research"?"Research / PhD roles":"IT / Software Industry only";
   const _u=currentRank.level||0;
-  $('seniorityNote').innerHTML=`🎖️ <strong>Seniority-aware search active:</strong> Your resume indicates you are currently a <strong>${esc(currentRank.label)}</strong>. `+
-    `India results are filtered <strong>strictly to your level — ${esc(currentRank.label)} posts only</strong>`+(_u>=4?" <strong>and above</strong> (e.g. HoD/Dean)":"")+(_u<=1?", plus other entry-level roles":"")+`. International/remote results are unrestricted.`;
+  $('seniorityNote').innerHTML=`🎖️ <strong>Profile-aware search active.</strong> Resume analysis: <strong>${esc(currentRank.label)}</strong> · <strong>${_y<1?"Fresher (< 1 yr)":Math.round(_y)+" yrs experience"}</strong> · Field: <strong>${esc(currentRank.field)}</strong>. `+
+    (_u===0?`You will see <strong>internships, trainee and fresher/entry-level roles</strong>.`
+     :_u===1?`You will see <strong>junior-level roles</strong> (Lecturer/Engineer and entry posts).`
+     :`India results are matched to your level — <strong>${esc(currentRank.label)}</strong>${_u>=4?" <strong>and above</strong> (HoD/Dean)":""}.`)+
+    ` International/remote results are unrestricted. You can adjust Job Type / Experience / Location below before searching.`;
   $('step2').classList.remove('hidden');
   buildSrcGrid();
   $('step2').scrollIntoView({behavior:'smooth'});
@@ -457,7 +545,8 @@ function buildSrcGrid(){$('srcGrid').innerHTML=SITES.map((s,i)=>`<label><input t
 function buildQuery(){
   const isProf=currentRank.level>=4;
   const kw=skills.filter(s=>!/professor|lecturer|teaching/.test(s)).slice(0,3).join(" ");
-  let role=isProf?(/Head|Dean/.test(currentRank.label)?"Professor Head of Department":"Professor"):(roles[0]||(currentRank.level<=1?"Computer Science Fresher":"Computer Science"));
+  let role=isProf?(/Head|Dean/.test(currentRank.label)?"Professor Head of Department":"Professor")
+    :(roles[0]||(currentRank.level<=1?(profField==="Teaching"?"Computer Science Faculty":"Computer Science Fresher"):"Computer Science"));
   let q=(role+" "+(kw||"computer science engineering")).trim();
   if(currentRank.level<=1&&!isProf)q+=" entry level";
   if(/Abroad|Gulf|Europe/.test($('qLoc').value))q+=" international";
@@ -503,8 +592,15 @@ async function findJobs(){
     if(uLvl>=4)return l>=uLvl;
     if(uLvl>=2)return l===uLvl;
     return l<=1;});
+  /* Fallback: never leave the user with zero curated results — show all levels for the chosen type+region */
+  let relaxed=false;
+  if(!list.length){
+    relaxed=true;
+    list=JOBS.filter(j=>{if(wantTeachOnly&&j.ty!=="Teaching")return false;if(wantITOnly&&j.ty!=="IT Industry")return false;if(wantResearchOnly&&j.ty!=="Research")return false;return inRegion(j.loc);});
+  }
 
   const note=$('fetchNote');note.innerHTML="";
+  if(relaxed)note.innerHTML+='<div class="alert warn">⚠️ No curated jobs matched your exact level for this region/type — showing all available levels instead. Try "India — Any city", another state, or a different Job Type for tighter results.</div>';
   const live=[];
   const score=(t,d)=>{const txt=(t+" "+d).toLowerCase().slice(0,4000);let m=0;skills.forEach(s=>{if(has(txt,s.trim()))m+=2;});
     if(isProf&&/professor|head|dean|principal/i.test(t))m+=6;
@@ -514,7 +610,7 @@ async function findJobs(){
     try{
       const rk=await getJSON("https://remoteok.com/api");
       rk.slice(1,120).forEach(j=>{
-        if(score(j.position||"",j.description||"")>=2&&inRegion(j.location||"")&&!(indiaOnly&&uLvl>=2&&/intern|junior|student|fresher/i.test(j.position||"")))
+        if(score(j.position||"",j.description||"")>=2&&inRegion(j.location||"")&&!(indiaOnly&&uLvl>=2&&/intern|junior|student|fresher/i.test(j.position||""))&&!(uLvl<=1&&/senior|lead|manager|architect|principal|\bhead\b|director|staff/i.test(j.position||"")))
           live.push({t:j.position||"Role",i:j.company||"Company",ty:"IT Industry",loc:j.location||"Remote",sal:j.salary_min?"$"+Math.round(j.salary_min/1000)+"k+":"Competitive",src:"RemoteOK (live)",url:safeUrl(j.url),live:1,contact:mailOf(j.description)});});
     }catch(e){note.innerHTML+=`<div class="alert warn">RemoteOK live feed unavailable (offline or blocked) — using curated + other sources.</div>`;}
     if(abroad||wantRemote||stateKW.length){
@@ -525,6 +621,16 @@ async function findJobs(){
             live.push({t:j.title||"Role",i:j.company_name||"Company",ty:"IT Industry",loc:j.location||"Europe (remote-friendly)",sal:"Competitive",src:"Arbeitnow (live)",url:safeUrl(j.url),live:1,contact:mailOf(j.description)});});
       }catch(e){}
     }
+  }
+  if(!wantTeachOnly){
+    try{
+      const jb=await getJSON("https://jobicy.com/api/v2/remote-jobs?count=50");
+      (jb.jobs||[]).slice(0,50).forEach(j=>{
+        const T=j.jobTitle||"",geo=j.jobGeo||"Remote";
+        if(score(T,j.jobDescription||"")>=2&&inRegion(geo)&&!(uLvl<=1&&/senior|lead|manager|architect|principal|head|director/i.test(T))&&!(indiaOnly&&uLvl>=2&&/intern|junior|student|fresher/i.test(T)))
+          live.push({t:T||"Role",i:j.companyName||"Company",ty:"IT Industry",loc:/global|worldwide|anywhere|remote/i.test(geo)?geo+" (Remote)":geo,sal:j.annualSalaryMin?"$"+Math.round(j.annualSalaryMin/1000)+"k+":"Competitive",src:"Jobicy (live)",url:safeUrl(j.url),live:1,contact:mailOf(j.jobDescription)});
+      });
+    }catch(e){}
   }
   const sm=savedMail();
   list=[...live,...list].map(j=>({...j,contact:j.contact||sm[j.i]||dirMail(j.i)||"",match:Math.min(99,40+score(j.t,j.i+" "+j.loc))}));
